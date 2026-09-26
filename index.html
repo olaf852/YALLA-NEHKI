@@ -14,7 +14,15 @@
 
 <header class="navbar">
   <div class="logo">يلا نحكي<span>.</span><span class="sub">YALLA NEHKI</span></div>
-  <nav>
+  
+  <!-- زر القائمة للجوال (3 خطوط) -->
+  <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileMenu()" aria-label="القائمة">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <nav id="nav-menu">
     <button onclick="showScreen('home')" data-nav="home">الرئيسية</button>
     <button onclick="showScreen('topics')" data-nav="topics">المواضيع</button>
     <button onclick="showScreen('progress')" data-nav="progress">تقدمي</button>
@@ -49,6 +57,9 @@
 
 <!-- TOPICS -->
 <section id="topics" class="screen">
+  <div class="mobile-back-bar">
+    <button class="back-link" onclick="showScreen('home')">‹ الرئيسية</button>
+  </div>
   <div class="page">
     <span class="tag">✦ قبل ما نبدأ</span>
     <h2>شو بدك تحكي <em>اليوم؟</em></h2>
@@ -87,6 +98,9 @@
 
 <!-- SPEAKING -->
 <section id="speaking" class="screen">
+  <div class="mobile-back-bar">
+    <button class="back-link" onclick="showScreen('topics')">‹ المواضيع</button>
+  </div>
   <div class="speak">
     <span class="eyebrow">موضوعك اليوم</span>
     <h2 id="current-topic">هل الفشل ضروري حتى ننجح؟</h2>
@@ -112,6 +126,9 @@
 
 <!-- RESULT -->
 <section id="result" class="screen">
+  <div class="mobile-back-bar">
+    <button class="back-link" onclick="showScreen('topics')">‹ المواضيع</button>
+  </div>
   <div class="page">
     <span class="tag">✦ خلصت!</span>
     <h2>خلينا نشوف <em>كيف كان حكيك.</em></h2>
@@ -136,6 +153,9 @@
 
 <!-- PROGRESS -->
 <section id="progress" class="screen">
+  <div class="mobile-back-bar">
+    <button class="back-link" onclick="showScreen('home')">‹ الرئيسية</button>
+  </div>
   <div class="page">
     <span class="tag">✦ رحلتك للحكي</span>
     <h2>إنت عم <em>تتطور.</em></h2>
@@ -155,6 +175,9 @@
 
 <!-- HISTORY -->
 <section id="history" class="screen">
+  <div class="mobile-back-bar">
+    <button class="back-link" onclick="showScreen('home')">‹ الرئيسية</button>
+  </div>
   <div class="page">
     <span class="tag">✦ سجل الحكي</span>
     <h2>محاولاتك <em>السابقة.</em></h2>

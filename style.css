@@ -26,6 +26,47 @@ img{max-width:100%}
 .navbar nav button.current{color:var(--rose)}
 .login-btn{border:1.5px solid var(--ink);border-radius:30px;padding:10px 22px;font-size:14px}
 
+/* HAMBURGER BUTTON (MOBILE) */
+.hamburger-btn{
+  display:none;
+  flex-direction:column;
+  justify-content:space-between;
+  width:28px;
+  height:20px;
+  z-index:30;
+}
+.hamburger-btn span{
+  display:block;
+  width:100%;
+  height:3px;
+  background:var(--ink);
+  border-radius:3px;
+  transition:.3s;
+}
+.hamburger-btn.open span:nth-child(1){
+  transform: translateY(8px) rotate(45deg);
+}
+.hamburger-btn.open span:nth-child(2){
+  opacity: 0;
+}
+.hamburger-btn.open span:nth-child(3){
+  transform: translateY(-9px) rotate(-45deg);
+}
+
+/* MOBILE BACK BUTTON BAR */
+.mobile-back-bar{
+  display:none;
+  padding:16px 24px 0;
+}
+.back-link{
+  font-size:16px;
+  font-weight:700;
+  color:var(--rose);
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+
 /* HOME */
 .hero{max-width:1200px;margin:auto;padding:7% 6% 5%;display:flex;align-items:center;justify-content:space-between;gap:60px;min-height:calc(100vh - 200px)}
 .tag{display:inline-block;background:var(--yellow);padding:7px 18px;border-radius:30px;font-size:13px;transform:rotate(-2deg)}
@@ -136,9 +177,38 @@ img{max-width:100%}
 .back-btn{margin-top:18px;color:var(--muted);font-size:14px}
 
 @media(max-width:840px){
-  .navbar nav{display:none}
-  .hero{flex-direction:column;text-align:center;padding-top:60px}
-  .preview{width:88%}
+  .hamburger-btn{display:flex}
+  .mobile-back-bar{display:block}
+  .page{padding-top:20px}
+  
+  .navbar nav{
+    display:none;
+    position:absolute;
+    top:88px;
+    right:0;
+    left:0;
+    background:var(--cream);
+    border-bottom:1px solid var(--line);
+    flex-direction:column;
+    gap:0;
+    padding:10px 0;
+    box-shadow:0 10px 20px rgba(0,0,0,.05);
+  }
+  .navbar nav.open{
+    display:flex;
+  }
+  .navbar nav button{
+    padding:16px 24px;
+    text-align:right;
+    width:100%;
+    border-bottom:1px solid rgba(0,0,0,.03);
+    font-size:16px;
+    font-weight:600;
+  }
+
+  .hero{flex-direction:column;text-align:center;padding-top:40px}
+  .hero-buttons{justify-content:center}
+  .preview{width:100%;max-width:340px}
   .grid2{grid-template-columns:1fr}
   .scores{grid-template-columns:1fr 1fr}
   .stats{grid-template-columns:1fr}
@@ -146,6 +216,6 @@ img{max-width:100%}
 }
 @media(max-width:480px){
   .login-btn{display:none}
-  .hero h1{font-size:46px}
+  .hero h1{font-size:42px}
   .card h2{font-size:19px}
 }

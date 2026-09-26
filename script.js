@@ -3,6 +3,7 @@ let isRecording=false, timerSeconds=120, timerInterval=null;
 let mediaRecorder=null, audioChunks=[], audioURL=null, sessionStart=0, sessionSeconds=0;
 let recognition=null, transcript='';
 let claudeSample=null;
+
 (async()=>{
   try{ if(window.claude && typeof window.claude.use==='function'){ claudeSample = await window.claude.use('sample'); } }catch(e){}
 })();
@@ -23,10 +24,22 @@ const englishTopics={
 function getHistory(){try{return JSON.parse(localStorage.getItem('ehki_history')||'[]')}catch(e){return[]}}
 function saveHistory(list){try{localStorage.setItem('ehki_history',JSON.stringify(list))}catch(e){}}
 
+function toggleMobileMenu(){
+  const nav = document.getElementById('nav-menu');
+  const btn = document.getElementById('hamburger-btn');
+  nav.classList.toggle('open');
+  btn.classList.toggle('open');
+}
+
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   document.querySelectorAll('[data-nav]').forEach(b=>b.classList.toggle('current',b.dataset.nav===id));
+  
+  // إغلاق القائمة في الجوال عند الاختيار
+  document.getElementById('nav-menu').classList.remove('open');
+  document.getElementById('hamburger-btn').classList.remove('open');
+
   if(id==='progress') renderProgress();
   if(id==='history') renderHistory();
   window.scrollTo({top:0,behavior:'smooth'});
