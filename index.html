@@ -8,14 +8,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
-
 </head>
 <body>
 
 <header class="navbar">
   <div class="logo">يلا نحكي<span>.</span><span class="sub">YALLA NEHKI</span></div>
   
-  <!-- زر القائمة للجوال (3 خطوط) -->
   <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileMenu()" aria-label="القائمة">
     <span></span>
     <span></span>
@@ -46,9 +44,9 @@
       <span class="doodle d1">✦</span>
       <span class="doodle d2">↗</span>
       <div class="card">
-        <div class="card-top"><span>موضوع عشوائي</span><span>🎲</span></div>
+        <div class="card-top"><span>موضوع عشوائي</span><span>🎡</span></div>
         <div class="card-icon">؟</div>
-        <h2>لو فيك تعيش يوم واحد من حياتك من جديد، أي يوم بتختار؟</h2>
+        <h2>شو صار بشغلك اليوم؟</h2>
         <div class="card-bottom"><span>⏱ 2 دقيقة</span><span>🎙 حكي</span></div>
       </div>
     </div>
@@ -76,9 +74,14 @@
         <h3>🎯 نوع الموضوع</h3>
         <div class="opts">
           <button class="opt active" onclick="selectCategory('عشوائي',this)">🎲 عشوائي</button>
-          <button class="opt" onclick="selectCategory('تفكير',this)">🧠 تفكير</button>
-          <button class="opt" onclick="selectCategory('حياة',this)">🌍 حياة</button>
-          <button class="opt" onclick="selectCategory('إبداع',this)">💡 إبداع</button>
+          <button class="opt" onclick="selectCategory('الشغل',this)">💼 الشغل</button>
+          <button class="opt" onclick="selectCategory('المشوار',this)">🚗 المشوار</button>
+          <button class="opt" onclick="selectCategory('الأكل',this)">🍔 الأكل</button>
+          <button class="opt" onclick="selectCategory('الجيم والصحة',this)">🏋️ الجيم والصحة</button>
+          <button class="opt" onclick="selectCategory('الفلوس والمصاريف',this)">💰 الفلوس والمصاريف</button>
+          <button class="opt" onclick="selectCategory('التكنولوجيا',this)">📱 التكنولوجيا</button>
+          <button class="opt" onclick="selectCategory('الأصحاب والعيلة',this)">👥 الأصحاب والعيلة</button>
+          <button class="opt" onclick="selectCategory('قصص وحكايات',this)">📖 قصص وحكايات</button>
         </div>
       </div>
     </div>
@@ -92,7 +95,27 @@
         <button onclick="selectLevel('C1',this)">C1</button>
       </div>
     </div>
-    <button class="big-btn" onclick="generateTopic()">فاجئني 🎲</button>
+    <button class="big-btn" onclick="generateTopic()">فاجئني 🎡</button>
+  </div>
+</section>
+
+<!-- WHEEL SCREEN (FULL PAGE) -->
+<section id="wheel-screen" class="screen">
+  <div class="wheel-page">
+    <span class="tag">✦ عجلة الحظ</span>
+    <h2 class="wheel-main-title">عم نختار <em>الموضوع...</em></h2>
+    
+    <div class="wheel-wrapper">
+      <div class="wheel-pointer">▼</div>
+      <div id="wheel" class="wheel">
+      </div>
+      <div class="wheel-center">✦</div>
+    </div>
+
+    <div class="wheel-status-box">
+      <h3 id="wheel-status">عم ندور عجلة المواضيع...</h3>
+      <p id="wheel-topic-preview">عم نختار موضوعك اليوم...</p>
+    </div>
   </div>
 </section>
 
@@ -103,7 +126,7 @@
   </div>
   <div class="speak">
     <span class="eyebrow">موضوعك اليوم</span>
-    <h2 id="current-topic">هل الفشل ضروري حتى ننجح؟</h2>
+    <h2 id="current-topic">شو صار بشغلك؟</h2>
     <p class="meta" id="language-label">عربي • موضوع عشوائي</p>
     <div class="timer"><span id="timer">02:00</span></div>
     <button id="record-button" class="rec-btn" onclick="toggleRecording()">🎙️</button>
@@ -145,7 +168,7 @@
       <div class="try">💡 جرّب المرة الجاية<strong id="ai-tip">أعطِ مثالاً حقيقياً يدعم فكرتك.</strong></div>
     </div>
     <div class="result-btns">
-      <button class="btn-primary" onclick="showScreen('topics')">موضوع جديد 🎲</button>
+      <button class="btn-primary" onclick="showScreen('topics')">موضوع جديد 🎡</button>
       <button class="btn-secondary" onclick="showScreen('history')">مشاهدة محاولاتي</button>
     </div>
   </div>
@@ -200,27 +223,6 @@
   </div>
 </section>
 
-<!-- DICE OVERLAY MODAL -->
-<div id="dice-overlay" class="dice-overlay">
-  <div class="dice-modal">
-    <div class="scene">
-      <div id="dice" class="dice">
-        <div class="face front">🎲</div>
-        <div class="face back">🧠</div>
-        <div class="face right">💡</div>
-        <div class="face left">🌍</div>
-        <div class="face top">✦</div>
-        <div class="face bottom">🎙️</div>
-      </div>
-    </div>
-    <div class="dice-text">
-      <h3 id="dice-status">عم نختارلك موضوع...</h3>
-      <p id="dice-topic-preview">محظوظ اليوم بـ...</p>
-    </div>
-  </div>
-</div>
-
 <script src="script.js"></script>
-
 </body>
 </html>

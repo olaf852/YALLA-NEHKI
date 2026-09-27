@@ -20,11 +20,9 @@ img{max-width:100%}
 .logo{font-family:'Amiri',serif;font-size:28px;font-weight:700;line-height:1}
 .logo span{color:var(--rose)}
 .logo .sub{display:block;font-family:'Cairo',sans-serif;font-size:10px;font-weight:600;letter-spacing:1.5px;color:var(--muted);margin-top:4px}
-.login-card .logo .sub{margin-bottom:6px}
 .navbar nav{display:flex;gap:34px}
 .navbar nav button{font-size:15px;color:var(--ink);position:relative;padding:4px 0}
 .navbar nav button.current{color:var(--rose)}
-.login-btn{border:1.5px solid var(--ink);border-radius:30px;padding:10px 22px;font-size:14px}
 
 /* HAMBURGER BUTTON (MOBILE) */
 .hamburger-btn{
@@ -43,29 +41,12 @@ img{max-width:100%}
   border-radius:3px;
   transition:.3s;
 }
-.hamburger-btn.open span:nth-child(1){
-  transform: translateY(8px) rotate(45deg);
-}
-.hamburger-btn.open span:nth-child(2){
-  opacity: 0;
-}
-.hamburger-btn.open span:nth-child(3){
-  transform: translateY(-9px) rotate(-45deg);
-}
+.hamburger-btn.open span:nth-child(1){ transform: translateY(8px) rotate(45deg); }
+.hamburger-btn.open span:nth-child(2){ opacity: 0; }
+.hamburger-btn.open span:nth-child(3){ transform: translateY(-9px) rotate(-45deg); }
 
-/* MOBILE BACK BUTTON BAR */
-.mobile-back-bar{
-  display:none;
-  padding:16px 24px 0;
-}
-.back-link{
-  font-size:16px;
-  font-weight:700;
-  color:var(--rose);
-  display:inline-flex;
-  align-items:center;
-  gap:4px;
-}
+.mobile-back-bar{ display:none; padding:16px 24px 0; }
+.back-link{ font-size:16px; font-weight:700; color:var(--rose); display:inline-flex; align-items:center; gap:4px; }
 
 /* HOME */
 .hero{max-width:1200px;margin:auto;padding:7% 6% 5%;display:flex;align-items:center;justify-content:space-between;gap:60px;min-height:calc(100vh - 200px)}
@@ -77,7 +58,6 @@ img{max-width:100%}
 .btn-primary,.btn-secondary{border-radius:40px;padding:14px 28px;font-size:15px;font-weight:600}
 .btn-primary{background:var(--ink);color:var(--paper)}
 .btn-secondary{border:1.5px solid #cabfb4;color:var(--ink)}
-.btn-primary:hover{opacity:.88}
 
 .preview{position:relative;width:380px;flex:none}
 .doodle{position:absolute;font-size:34px;color:var(--rose)}
@@ -89,7 +69,7 @@ img{max-width:100%}
 .card h2{font-size:24px;line-height:1.6;font-weight:700}
 .card-bottom{margin-top:32px;padding-top:16px;border-top:1px dashed var(--line);display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
 
-/* SHARED PAGE */
+/* PAGE SHARED */
 .page{max-width:940px;margin:auto;padding:64px 24px 90px}
 .page h2{font-size:clamp(38px,6vw,58px);line-height:1.15;margin-top:18px}
 .page h2 em{font-style:normal;color:var(--rose)}
@@ -108,6 +88,103 @@ img{max-width:100%}
 .levels button{border:1px solid #d2c5b8;padding:9px 18px;border-radius:20px;font-size:14px}
 .levels button.active{background:var(--rose);border-color:var(--rose);color:var(--paper)}
 .big-btn{display:block;margin:46px auto 0;padding:16px 46px;background:var(--ink);color:var(--paper);border-radius:40px;font-size:16px;font-weight:600}
+
+/* FULL-SCREEN WHEEL DESIGN (SVG) */
+.wheel-page {
+  max-width: 800px;
+  margin: auto;
+  padding: 40px 24px 60px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.wheel-main-title {
+  font-size: clamp(32px, 5vw, 46px);
+  margin: 12px 0 28px;
+}
+.wheel-main-title em { font-style: normal; color: var(--rose); }
+
+.wheel-wrapper {
+  position: relative;
+  width: min(380px, 88vw);
+  height: min(380px, 88vw);
+  margin: 10px auto;
+}
+
+/* السهم العلوي للتأشير */
+.wheel-pointer {
+  position: absolute;
+  top: -12px; 
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0; 
+  height: 0;
+  border-left: 14px solid transparent;
+  border-right: 14px solid transparent;
+  border-top: 24px solid var(--ink);
+  z-index: 10;
+  filter: drop-shadow(0 3px 5px rgba(0,0,0,0.3));
+}
+
+/* قرص العجلة الـ SVG */
+.wheel {
+  width: 100%; 
+  height: 100%;
+  border-radius: 50%;
+  border: 6px solid var(--ink);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(34,27,23,0.18);
+  transition: transform 4.5s cubic-bezier(0.15, 0.88, 0.15, 0.98);
+}
+.wheel svg { display: block; width: 100%; height: 100%; }
+
+/* المركز الدائري */
+.wheel-center {
+  position: absolute;
+  top: 50%; 
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 52px; 
+  height: 52px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 50%;
+  display: grid; 
+  place-items: center;
+  font-size: 20px; 
+  font-weight: bold;
+  box-shadow: 0 0 12px rgba(0,0,0,0.3);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.wheel-status-box {
+  margin-top: 32px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 20px 28px;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+}
+.wheel-status-box h3 {
+  font-size: 20px; 
+  font-weight: 700; 
+  color: var(--ink); 
+  margin-bottom: 8px;
+}
+.wheel-status-box p {
+  font-size: 16px; 
+  color: var(--muted); 
+  min-height: 48px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  line-height: 1.5;
+}
 
 /* SPEAKING */
 .speak{max-width:780px;margin:auto;padding:56px 24px;text-align:center}
@@ -176,76 +253,10 @@ img{max-width:100%}
 .login-card .btn-primary{width:100%;margin-top:4px}
 .back-btn{margin-top:18px;color:var(--muted);font-size:14px}
 
-/* DICE OVERLAY & ANIMATION */
-.dice-overlay{
-  position:fixed;
-  top:0; left:0; width:100vw; height:100vh;
-  background:rgba(34,27,23,0.85);
-  backdrop-filter:blur(6px);
-  display:flex; justify-content:center; align-items:center;
-  z-index:999;
-  opacity:0; pointer-events:none;
-  transition:opacity 0.3s ease;
-}
-.dice-overlay.active{
-  opacity:1; pointer-events:auto;
-}
-.dice-modal{
-  background:var(--paper);
-  padding:40px;
-  border-radius:28px;
-  text-align:center;
-  max-width:420px;
-  width:90%;
-  box-shadow:0 20px 40px rgba(0,0,0,0.2);
-  display:flex; flex-direction:column; align-items:center; gap:24px;
-}
-.scene{
-  width:80px; height:80px;
-  perspective:400px;
-}
-.dice{
-  width:100%; height:100%;
-  position:relative;
-  transform-style:preserve-3d;
-  transform:translateZ(-40px) rotateX(0deg) rotateY(0deg);
-  transition:transform 0.5s ease-out;
-}
-.dice.rolling{
-  animation:rollDice 0.6s linear infinite;
-}
-.face{
-  position:absolute; width:80px; height:80px;
-  background:var(--yellow);
-  border:2px solid var(--ink);
-  border-radius:16px;
-  display:grid; place-items:center;
-  font-size:32px; font-weight:bold;
-  box-shadow:inset 0 0 10px rgba(0,0,0,0.05);
-}
-.face.front  { transform: rotateY(  0deg) translateZ(40px); }
-.face.back   { transform: rotateY(180deg) translateZ(40px); background:var(--rose); color:#fff; }
-.face.right  { transform: rotateY( 90deg) translateZ(40px); background:var(--blue); }
-.face.left   { transform: rotateY(-90deg) translateZ(40px); }
-.face.top    { transform: rotateX( 90deg) translateZ(40px); background:var(--rose); color:#fff; }
-.face.bottom { transform: rotateX(-90deg) translateZ(40px); background:var(--blue); }
-
-@keyframes rollDice{
-  0%{ transform: translateZ(-40px) rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-  100%{ transform: translateZ(-40px) rotateX(360deg) rotateY(360deg) rotateZ(180deg); }
-}
-
-.dice-text h3{
-  font-size:20px; font-weight:700; color:var(--ink); margin-bottom:8px;
-}
-.dice-text p{
-  font-size:15px; color:var(--muted); min-height:48px; display:flex; align-items:center; justify-content:center;
-}
-
 @media(max-width:840px){
   .hamburger-btn{display:flex}
   .mobile-back-bar{display:block}
-  .page{padding-top:20px}
+  .page,.wheel-page{padding-top:20px}
   
   .navbar nav{
     display:none;
@@ -260,9 +271,7 @@ img{max-width:100%}
     padding:10px 0;
     box-shadow:0 10px 20px rgba(0,0,0,.05);
   }
-  .navbar nav.open{
-    display:flex;
-  }
+  .navbar nav.open{ display:flex; }
   .navbar nav button{
     padding:16px 24px;
     text-align:right;
@@ -281,7 +290,6 @@ img{max-width:100%}
   .result-btns{flex-direction:column}
 }
 @media(max-width:480px){
-  .login-btn{display:none}
   .hero h1{font-size:42px}
   .card h2{font-size:19px}
 }

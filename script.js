@@ -8,17 +8,187 @@ let claudeSample=null;
   try{ if(window.claude && typeof window.claude.use==='function'){ claudeSample = await window.claude.use('sample'); } }catch(e){}
 })();
 
-const arabicTopics={
-  "تفكير":["هل التكنولوجيا قرّبت الناس من بعض ولا بعّدتهم؟","هل الذكاء الاصطناعي رح ياخد مكان البشر بالشغل؟","هل الفشل ضروري حتى ننجح؟","هل الحرية المطلقة موجودة أصلاً؟","ليش منخاف من التغيير مع إنه أحياناً بيكون لمصلحتنا؟","هل الصدق دايماً هو أفضل سياسة؟","شو الفرق بين الذكاء والحكمة؟","هل لازم نسامح حتى لو ما اعتذرلنا حدا؟","هل وسائل التواصل غيّرت طريقة تفكيرنا؟","هل القرارات الصعبة لازم تكون سريعة ولا ناخد وقتنا فيها؟"],
-  "حياة":["هل المال فعلاً بيشتري السعادة؟","شو المدينة اللي حابب تزورها وليش؟","شو أهم درس تعلمته من أهلك؟","كيف بتوصف حياتك المثالية بعد عشر سنين؟","شو أكتر شي بتقدره بصداقاتك؟","هل الروتين اليومي بيريحك ولا بيضجرك؟","شو أصعب قرار اخدته بحياتك؟","كيف بتوازن بين شغلك وحياتك الشخصية؟","شو العادة اللي بتتمنى تبلّشها من بكرا؟","إذا قدرت تعيش بأي بلد، وين بتختار وليش؟"],
-  "إبداع":["شو الشي اللي نفسك تتعلمه وليش؟","لو صممت منتج جديد، شو بيكون؟","لو قدرت تخترع شغلة تسهّل حياة الناس، شو بتكون؟","احكيلي عن فكرة مشروع حلمت فيها يوماً.","لو كتبت كتاب، عن شو بيكون؟","شو الفن اللي بيعبّر عنك أكتر: موسيقى، رسم، ولا كتابة؟","لو صممت مدينة من الصفر، كيف بتكون؟","شو أغرب فكرة خطرت على بالك وحبيت تجربها؟"],
-  "عشوائي":["هل الفشل ضروري حتى ننجح؟","لو قدرت تغيّر قرار واحد بحياتك، شو بتغيّر؟","لو فيك تعيش يوم واحد من حياتك من جديد، أي يوم بتختار؟","شو أطرف موقف صار معك؟","لو ربحت مبلغ كبير فجأة، أول شي رح تعمله شو؟","مين الشخص اللي أثّر فيك أكتر بحياتك؟"]
+// Web Audio API Sound Effects for Wheel
+function playClickSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(600, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.05);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.05);
+  } catch(e) {}
+}
+
+function playWinSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const notes = [440, 554.37, 659.25, 880];
+    notes.forEach((freq, index) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + index * 0.1);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime + index * 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + index * 0.1 + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + index * 0.1);
+      osc.stop(ctx.currentTime + index * 0.1 + 0.3);
+    });
+  } catch(e) {}
+}
+
+const arabicTopics = {
+  "عشوائي": [
+    "يوم ما بنساه",
+    "أغرب حلم",
+    "مكان نفسي أزوره",
+    "عادة غريبة عندي",
+    "موقف محرج",
+    "لو رجع فيني الزمن",
+    "شغلة بتخليني أضحك",
+    "قرار ندمت عليه"
+  ],
+  "الشغل": [
+    "أول شغل إلي",
+    "الفريلانس",
+    "شغل أحلامي",
+    "أسوأ مدير",
+    "العمل من البيت",
+    "أول راتب",
+    "شغل ما بقدر أعمله",
+    "النجاح بالشغل"
+  ],
+  "الأكل": [
+    "الفطور المفضل",
+    "أكلة ما بملّ منها",
+    "أول طبخة عملتها",
+    "أكل الشارع",
+    "أكلة أكرهها",
+    "أكل آخر الليل",
+    "مطعم ما بنساه",
+    "أكلة بتذكرني بالبيت"
+  ],
+  "الرياضة والجسم": [
+    "الكارديو",
+    "أول مرة بالنادي",
+    "رياضة بحبها",
+    "رياضة ما بفهمها",
+    "المشي",
+    "يوم بدون حركة",
+    "شكل الجسم",
+    "الرياضة والمزاج"
+  ],
+  "الفلوس": [
+    "أول دين",
+    "أول مصروف",
+    "أول راتب",
+    "أغلى شي اشتريته",
+    "التوفير",
+    "المصروف بدون حساب",
+    "الفلوس والسعادة",
+    "شغلة نفسي اشتريها"
+  ],
+  "السوشيال ميديا": [
+    "باسورد نسيته",
+    "أول حساب إلي",
+    "أول موبايل",
+    "السوشيال ميديا",
+    "يوم بدون موبايل",
+    "صورة ندمت إني نشرتها",
+    "تطبيق ما بقدر أعيش بدونه",
+    "الإنترنت غيّر حياتي"
+  ],
+  "يومياتك": [
+    "شخص غيّر تفكيري",
+    "موقف ما بنساه",
+    "قرار غيّر حياتي",
+    "يوم كان مختلف",
+    "شخص بتمنى أقابله",
+    "نصيحة ما نسيتها",
+    "موقف خلاني أضحك",
+    "شغلة اكتشفتها عن حالي"
+  ]
 };
-const englishTopics={
-  "تفكير":["Has technology brought people closer or pushed them apart?","Will AI replace most human jobs?","Is failure necessary for success?","Does true freedom really exist?","Why do we fear change even when it benefits us?","Is honesty always the best policy?","What's the difference between intelligence and wisdom?","Should we forgive even without an apology?","Have social platforms changed how we think?"],
-  "حياة":["Does money really buy happiness?","What city would you like to visit, and why?","What's the most important lesson your parents taught you?","How do you picture your ideal life ten years from now?","What do you value most in your friendships?","Does a daily routine comfort you or bore you?","What's the hardest decision you've ever made?","How do you balance work and personal life?"],
-  "إبداع":["What is one skill you would love to learn?","If you designed a new product, what would it be?","If you invented something to make life easier, what would it be?","Tell me about a project idea you once dreamed of.","If you wrote a book, what would it be about?","If you designed a city from scratch, what would it look like?"],
-  "عشوائي":["What makes a person successful?","If you could change one thing about your life, what would it be?","If you could relive one day of your life, which would you choose?","What's the funniest thing that's ever happened to you?","If you suddenly won a large sum of money, what's the first thing you'd do?","Who is the person who has influenced you the most?"]
+
+const englishTopics = {
+  "عشوائي": [
+    "A day I will never forget",
+    "The strangest dream",
+    "A place I wish to visit",
+    "A strange habit I have",
+    "An embarrassing situation",
+    "If I could turn back time",
+    "Something that makes me laugh",
+    "A decision I regretted"
+  ],
+  "الشغل": [
+    "My very first job",
+    "Freelancing",
+    "My dream job",
+    "The worst boss",
+    "Working from home",
+    "My first salary",
+    "A job I could never do",
+    "Success at work"
+  ],
+  "الأكل": [
+    "Favorite breakfast",
+    "A meal I never get tired of",
+    "The first dish I cooked",
+    "Street food",
+    "A dish I hate",
+    "Late-night food",
+    "An unforgettable restaurant",
+    "A dish that reminds me of home"
+  ],
+  "الرياضة والجسم": [
+    "Cardio workouts",
+    "First time at the gym",
+    "A sport I love",
+    "A sport I don't understand",
+    "Walking",
+    "A day without movement",
+    "Body shape and fitness",
+    "Exercise and mood"
+  ],
+  "الفلوس": [
+    "My first debt",
+    "My first allowance",
+    "My first salary",
+    "The most expensive thing I bought",
+    "Saving money",
+    "Spending without limits",
+    "Money and happiness",
+    "Something I really want to buy"
+  ],
+  "السوشيال ميديا": [
+    "A password I forgot",
+    "My first social account",
+    "My first mobile phone",
+    "Social media life",
+    "A day without my phone",
+    "A photo I regretted posting",
+    "An app I can't live without",
+    "How the internet changed my life"
+  ],
+  "يومياتك": [
+    "Someone who changed my mindset",
+    "An unforgettable moment",
+    "A life-changing decision",
+    "A day that was different",
+    "Someone I wish to meet",
+    "Advice I never forgot",
+    "A moment that made me laugh",
+    "Something I discovered about myself"
+  ]
 };
 
 function getHistory(){try{return JSON.parse(localStorage.getItem('ehki_history')||'[]')}catch(e){return[]}}
@@ -36,7 +206,6 @@ function showScreen(id){
   document.getElementById(id).classList.add('active');
   document.querySelectorAll('[data-nav]').forEach(b=>b.classList.toggle('current',b.dataset.nav===id));
   
-  // إغلاق القائمة في الجوال عند الاختيار
   document.getElementById('nav-menu').classList.remove('open');
   document.getElementById('hamburger-btn').classList.remove('open');
 
@@ -62,20 +231,98 @@ function selectLevel(lvl,btn){
   btn.classList.add('active');
 }
 
-function generateTopic(){
-  const bank=selectedLanguage==='en'?englishTopics:arabicTopics;
-  const pool=bank[selectedCategory]||bank["عشوائي"];
-  const topic=pool[Math.floor(Math.random()*pool.length)];
-  
-  const overlay = document.getElementById('dice-overlay');
-  const dice = document.getElementById('dice');
-  const statusTxt = document.getElementById('dice-status');
-  const previewTxt = document.getElementById('dice-topic-preview');
+let wheelRotation = 0;
+const colors = ['#EFC85F', '#C88E97', '#9BBBC0', '#F5EFE3', '#D8B4F8', '#A2E8DD'];
 
-  overlay.classList.add('active');
-  dice.classList.add('rolling');
-  statusTxt.textContent = "عم نختارلك موضوع...";
+function polarToCartesian(cx, cy, r, angleDeg) {
+  const a = (angleDeg - 90) * Math.PI / 180;
+  return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+}
+
+function escapeXml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function generateTopic() {
+  const bank = selectedLanguage === 'en' ? englishTopics : arabicTopics;
+  let pool = [];
   
+  if (selectedCategory === "عشوائي") {
+    Object.values(bank).forEach(arr => pool.push(...arr));
+  } else {
+    pool = bank[selectedCategory] || bank["الشغل"];
+  }
+
+  const wheelTopics = [...pool].sort(() => 0.5 - Math.random()).slice(0, Math.min(6, pool.length));
+  const winnerIndex = Math.floor(Math.random() * wheelTopics.length);
+  const topic = wheelTopics[winnerIndex];
+
+  const wheelEl = document.getElementById('wheel');
+  
+  wheelEl.innerHTML = '<svg id="wheelSvg" viewBox="0 0 300 300"></svg>';
+  const svg = document.getElementById('wheelSvg');
+
+  const n = wheelTopics.length;
+  const seg = 360 / n;
+  const cx = 150, cy = 150, r = 148;
+  let html = '';
+
+  for (let i = 0; i < n; i++) {
+    const start = i * seg;
+    const end = (i + 1) * seg;
+    const [x1, y1] = polarToCartesian(cx, cy, r, start);
+    const [x2, y2] = polarToCartesian(cx, cy, r, end);
+    const large = seg > 180 ? 1 : 0;
+    const color = colors[i % colors.length];
+
+    html += `<path d="M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${large} 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z" fill="${color}" stroke="#221B17" stroke-width="2.5"/>`;
+
+    const mid = start + seg / 2;
+    const [tx, ty] = polarToCartesian(cx, cy, r * 0.58, mid);
+    const dark = '#221B17';
+
+    let labelText = wheelTopics[i];
+    if (labelText.length > 22) labelText = labelText.substring(0, 20) + '...';
+
+    let textRotation = mid;
+    if (mid > 90 && mid < 270) {
+      textRotation = mid + 180;
+    }
+
+    html += `<text x="${tx.toFixed(2)}" y="${ty.toFixed(2)}" fill="${dark}" font-size="9.5" font-family="Cairo, sans-serif" font-weight="700" text-anchor="middle" dominant-baseline="middle" transform="rotate(${textRotation},${tx.toFixed(2)},${ty.toFixed(2)})">${escapeXml(labelText)}</text>`;
+  }
+
+  svg.innerHTML = html;
+  showScreen('wheel-screen');
+
+  const statusTxt = document.getElementById('wheel-status');
+  const previewTxt = document.getElementById('wheel-topic-preview');
+
+  statusTxt.textContent = "عم ندور عجلة المواضيع...";
+  previewTxt.textContent = "يا ترى شو الموضوع اليوم؟";
+
+  const mid = winnerIndex * seg + seg / 2;
+  const extraTurns = 5 + Math.floor(Math.random() * 2); 
+  const target = extraTurns * 360 + (360 - mid);
+
+  wheelRotation += target;
+
+  setTimeout(() => {
+    wheelEl.style.transform = `rotate(${wheelRotation}deg)`;
+  }, 50);
+
+  // Play click sounds while wheel spins
+  let clickInterval = setInterval(() => {
+    playClickSound();
+  }, 180);
+
+  setTimeout(() => {
+    clearInterval(clickInterval);
+    clickInterval = setInterval(() => {
+      playClickSound();
+    }, 380);
+  }, 2500);
+
   let counter = 0;
   const interval = setInterval(() => {
     previewTxt.textContent = pool[Math.floor(Math.random() * pool.length)];
@@ -84,22 +331,25 @@ function generateTopic(){
 
   setTimeout(() => {
     clearInterval(interval);
-    dice.classList.remove('rolling');
+    clearInterval(clickInterval);
+    playWinSound();
     statusTxt.textContent = "🎯 تمام! هذا موضوعك:";
     previewTxt.textContent = `"${topic}"`;
     
     setTimeout(() => {
-      overlay.classList.remove('active');
-      document.getElementById('current-topic').textContent=topic;
-      document.getElementById('language-label').textContent=selectedLanguage==='en'?`English • ${selectedLevel} • ${selectedCategory}`:`عربي • ${selectedCategory}`;
-      document.getElementById('speaking').dataset.topic=topic;
-      document.getElementById('speaking').dataset.category=selectedCategory;
-      document.getElementById('speaking').dataset.lang=selectedLanguage;
-      resetTimer(); resetRecording();
-      document.getElementById('finish-button').disabled=true;
+      document.getElementById('current-topic').textContent = topic;
+      document.getElementById('language-label').textContent = selectedLanguage === 'en' 
+        ? `English • ${selectedLevel} • ${selectedCategory}` 
+        : `عربي • ${selectedCategory}`;
+      document.getElementById('speaking').dataset.topic = topic;
+      document.getElementById('speaking').dataset.category = selectedCategory;
+      document.getElementById('speaking').dataset.lang = selectedLanguage;
+      resetTimer(); 
+      resetRecording();
+      document.getElementById('finish-button').disabled = true;
       showScreen('speaking');
-    }, 1200);
-  }, 2000);
+    }, 1600);
+  }, 4500);
 }
 
 function resetTimer(){clearInterval(timerInterval);timerSeconds=120;sessionSeconds=0;updateTimer()}
@@ -149,7 +399,7 @@ function stopLevelMeter(){
 async function toggleRecording(){
   if(isRecording){stopRecording();return}
   if(location.protocol!=='https:' && !['localhost','127.0.0.1'].includes(location.hostname)){
-    alert('التسجيل بيحتاج اتصال آمن (https). افتح الصفحة عبر رابط https أو من سيرفر محلي، مش كملف مباشرة من الجهاز.');
+    alert('التسجيل بيحتاج اتصال آمن (https). افتح الصفحة عبر رابط https أو من سيرفر محلي.');
     return;
   }
   try{
@@ -273,7 +523,7 @@ async function finishSpeaking(){
     }catch(e){
       const fb=feedbackBank[Math.floor(Math.random()*feedbackBank.length)];
       scores=mockScores(); feedback=fb.f; tip=fb.t;
-      badge = e && e.code==='not_granted' ? 'تقييم تقديري — ما منحك صلاحية استخدام الذكاء الاصطناعي بهالصفحة' : 'تقييم تقديري — صار خطأ أثناء التحليل الحقيقي، جرّب مرة تانية.';
+      badge = e && e.code==='not_granted' ? 'تقييم تقديري — ما منحك صلاحية استخدام الذكاء الاصطناعي بهالصحة' : 'تقييم تقديري — صار خطأ أثناء التحليل الحقيقي، جرّب مرة تانية.';
     }
   } else {
     const fb=feedbackBank[Math.floor(Math.random()*feedbackBank.length)];
