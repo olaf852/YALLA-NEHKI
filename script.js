@@ -66,14 +66,40 @@ function generateTopic(){
   const bank=selectedLanguage==='en'?englishTopics:arabicTopics;
   const pool=bank[selectedCategory]||bank["عشوائي"];
   const topic=pool[Math.floor(Math.random()*pool.length)];
-  document.getElementById('current-topic').textContent=topic;
-  document.getElementById('language-label').textContent=selectedLanguage==='en'?`English • ${selectedLevel} • ${selectedCategory}`:`عربي • ${selectedCategory}`;
-  document.getElementById('speaking').dataset.topic=topic;
-  document.getElementById('speaking').dataset.category=selectedCategory;
-  document.getElementById('speaking').dataset.lang=selectedLanguage;
-  resetTimer(); resetRecording();
-  document.getElementById('finish-button').disabled=true;
-  showScreen('speaking');
+  
+  const overlay = document.getElementById('dice-overlay');
+  const dice = document.getElementById('dice');
+  const statusTxt = document.getElementById('dice-status');
+  const previewTxt = document.getElementById('dice-topic-preview');
+
+  overlay.classList.add('active');
+  dice.classList.add('rolling');
+  statusTxt.textContent = "عم نختارلك موضوع...";
+  
+  let counter = 0;
+  const interval = setInterval(() => {
+    previewTxt.textContent = pool[Math.floor(Math.random() * pool.length)];
+    counter++;
+  }, 100);
+
+  setTimeout(() => {
+    clearInterval(interval);
+    dice.classList.remove('rolling');
+    statusTxt.textContent = "🎯 تمام! هذا موضوعك:";
+    previewTxt.textContent = `"${topic}"`;
+    
+    setTimeout(() => {
+      overlay.classList.remove('active');
+      document.getElementById('current-topic').textContent=topic;
+      document.getElementById('language-label').textContent=selectedLanguage==='en'?`English • ${selectedLevel} • ${selectedCategory}`:`عربي • ${selectedCategory}`;
+      document.getElementById('speaking').dataset.topic=topic;
+      document.getElementById('speaking').dataset.category=selectedCategory;
+      document.getElementById('speaking').dataset.lang=selectedLanguage;
+      resetTimer(); resetRecording();
+      document.getElementById('finish-button').disabled=true;
+      showScreen('speaking');
+    }, 1200);
+  }, 2000);
 }
 
 function resetTimer(){clearInterval(timerInterval);timerSeconds=120;sessionSeconds=0;updateTimer()}
