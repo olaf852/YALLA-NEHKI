@@ -14,7 +14,7 @@
 <header class="navbar">
   <div class="logo">يلا نحكي<span>.</span><span class="sub">YALLA NEHKI</span></div>
   
-  <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileMenu()" aria-label="القائمة">
+  <button class="hamburger-btn" id="hamburger-btn" aria-expanded="false" onclick="toggleMobileMenu()" aria-label="القائمة">
     <span></span>
     <span></span>
     <span></span>
@@ -33,7 +33,7 @@
   <div class="hero">
     <div>
       <span class="tag">✦ مساحة للحكي والتجربة</span>
-      <h1> نحكي<em>عن أي شي.</em></h1>
+      <h1>يلا نحكي<em>عن أي شي.</em></h1>
       <p>اختار موضوع، و يلا نحكي عنه بصوتك، وخلي الذكاء الاصطناعي يساعدك تلاحظ وين فيك تتطور.</p>
       <div class="hero-buttons">
         <button class="btn-primary" onclick="showScreen('topics')">يلا نحكي ↗</button>
@@ -95,6 +95,26 @@
         <button onclick="selectLevel('C1',this)">C1</button>
       </div>
     </div>
+    <div class="grid2 setup-extra">
+      <div class="box">
+        <h3>⏱ مدة الحكي</h3>
+        <div class="opts">
+          <button class="opt" onclick="selectDuration(60,this)">دقيقة</button>
+          <button class="opt active" onclick="selectDuration(120,this)">دقيقتين</button>
+          <button class="opt" onclick="selectDuration(180,this)">3 دقايق</button>
+          <button class="opt" onclick="selectDuration(300,this)">5 دقايق</button>
+          <button class="opt" onclick="selectDuration(600,this)">10 دقايق</button>
+        </div>
+      </div>
+      <div class="box">
+        <h3>🎙 طريقة التمرين</h3>
+        <div class="opts">
+          <button class="opt active" onclick="selectMode('record',this)">🎙 مع تسجيل صوتي</button>
+          <button class="opt" onclick="selectMode('timer',this)">⏱ تايمر بس (بدون تسجيل)</button>
+        </div>
+        <p class="mode-hint" id="mode-hint">بنسجّل صوتك وبنحلله بالذكاء الاصطناعي (بيحتاج ميكروفون).</p>
+      </div>
+    </div>
     <button class="big-btn" onclick="generateTopic()">فاجئني 🎡</button>
   </div>
 </section>
@@ -103,9 +123,9 @@
 <section id="wheel-screen" class="screen">
   <div class="wheel-page">
     <span class="tag">✦ عجلة الحظ</span>
-    <h2 class="wheel-main-title">عم نختار <em>الموضوع...</em></h2>
+    <h2 class="wheel-main-title">لفّ <em>العجلة.</em></h2>
     
-    <div class="wheel-wrapper">
+    <div class="wheel-wrapper" onclick="spinWheel()" role="button" tabindex="0" aria-label="لفّ العجلة" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();spinWheel()}">
       <div class="wheel-pointer">▼</div>
       <div id="wheel" class="wheel">
       </div>
@@ -113,8 +133,13 @@
     </div>
 
     <div class="wheel-status-box">
-      <h3 id="wheel-status">عم ندور عجلة المواضيع...</h3>
+      <h3 id="wheel-status">اكبس على العجلة لتلفّها 🎡</h3>
       <p id="wheel-topic-preview">عم نختار موضوعك اليوم...</p>
+      <div class="wheel-actions">
+        <button id="wheel-spin-btn" class="btn-secondary" onclick="spinWheel()">لفّ العجلة 🎡</button>
+        <button id="wheel-go-btn" class="btn-primary hidden" onclick="goSpeakFromWheel()">يلا نحكي بهالموضوع ✓</button>
+      </div>
+      <button class="back-btn" onclick="showScreen('topics')">‹ غيّر الفئة</button>
     </div>
   </div>
 </section>
@@ -130,7 +155,8 @@
     <p class="meta" id="language-label">عربي • موضوع عشوائي</p>
     <div class="timer"><span id="timer">02:00</span></div>
     <button id="record-button" class="rec-btn" onclick="toggleRecording()">🎙️</button>
-    <p class="rec-note" id="record-status">لا تفكر كتير… يلا نحكي بس.</p>
+    <p class="rec-note" id="record-status" aria-live="polite">لا تفكر كتير… يلا نحكي بس.</p>
+    <button id="timer-reset" class="back-btn hidden" onclick="resetRecording()">↻ إعادة التايمر</button>
     <div id="level-meter" class="level-meter hidden">
       <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
     </div>
@@ -155,16 +181,16 @@
   <div class="page">
     <span class="tag">✦ خلصت!</span>
     <h2>خلينا نشوف <em>كيف كان حكيك.</em></h2>
-    <div class="scores">
-      <div class="score"><span>🗣️</span><strong id="s-fluency">82%</strong><small>الطلاقة</small></div>
-      <div class="score"><span>📚</span><strong id="s-vocab">76%</strong><small>المفردات</small></div>
-      <div class="score"><span>✏️</span><strong id="s-grammar">88%</strong><small>القواعد</small></div>
-      <div class="score"><span>💡</span><strong id="s-ideas">91%</strong><small>الأفكار</small></div>
+    <div class="scores" id="scores">
+      <div class="score"><span>🗣️</span><strong id="s-fluency">—</strong><small>الطلاقة</small></div>
+      <div class="score"><span>📚</span><strong id="s-vocab">—</strong><small>المفردات</small></div>
+      <div class="score"><span>✏️</span><strong id="s-grammar">—</strong><small>القواعد</small></div>
+      <div class="score"><span>💡</span><strong id="s-ideas">—</strong><small>الأفكار</small></div>
     </div>
     <div class="feedback">
       <h3>🤖 شو لاحظنا</h3>
       <span id="ai-badge" class="ai-badge"></span>
-      <p id="ai-feedback">وضّحت فكرتك بشكل جيد وربطت بين الأفكار بطريقة طبيعية. المرة الجاية جرّب توسّع الأمثلة اللي عم تستخدمها.</p>
+      <p id="ai-feedback" aria-live="polite">وضّحت فكرتك بشكل جيد وربطت بين الأفكار بطريقة طبيعية. المرة الجاية جرّب توسّع الأمثلة اللي عم تستخدمها.</p>
       <div class="try">💡 جرّب المرة الجاية<strong id="ai-tip">أعطِ مثالاً حقيقياً يدعم فكرتك.</strong></div>
     </div>
     <div class="result-btns">
@@ -183,6 +209,8 @@
     <span class="tag">✦ رحلتك للحكي</span>
     <h2>انت عم <em>تتطور.</em></h2>
     <div id="progress-body">
+      <div id="progress-empty" class="empty hidden">لسا ما بدأت رحلتك. احكي عن موضوع وشوف تقدمك هون ✦</div>
+      <div id="progress-content">
       <div class="stats">
         <div class="stat rose"><small>عدد المحاولات</small><strong id="p-count">0</strong></div>
         <div class="stat"><small>متوسط وقت الحكي</small><strong id="p-avg">0:00</strong></div>
@@ -191,6 +219,7 @@
       <div class="bars">
         <h3>توزيع المواضيع حسب الفئة</h3>
         <div id="bars-holder"></div>
+      </div>
       </div>
     </div>
   </div>
@@ -205,21 +234,6 @@
     <span class="tag">✦ سجل الحكي</span>
     <h2>محاولاتك <em>السابقة.</em></h2>
     <div id="hist-list" class="hist-list"></div>
-  </div>
-</section>
-
-<!-- LOGIN -->
-<section id="login" class="screen">
-  <div class="login-wrap">
-    <div class="login-card">
-      <div class="logo">يلا نحكي<span>.</span><span class="sub">YALLA NEHKI</span></div>
-      <h2>أهلاً فيك 👋</h2>
-      <p>سجّل دخولك حتى تحفظ كل محاولاتك.</p>
-      <input type="email" placeholder="البريد الإلكتروني">
-      <input type="password" placeholder="كلمة المرور">
-      <button class="btn-primary">تسجيل الدخول</button>
-      <button class="back-btn" onclick="showScreen('home')">رجوع</button>
-    </div>
   </div>
 </section>
 

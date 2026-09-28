@@ -1,4 +1,6 @@
 let selectedLanguage="ar", selectedLevel="B1", selectedCategory="عشوائي";
+let wheelData={topics:[],seg:0}, lastWinner=-1, spinning=false, wheelTopic='';
+let selectedDuration=120, selectedMode='record', practiceMode='record', sessionDuration=120, timerRunning=false, wheelTimers=[];
 let isRecording=false, timerSeconds=120, timerInterval=null;
 let mediaRecorder=null, audioChunks=[], audioURL=null, sessionStart=0, sessionSeconds=0;
 let recognition=null, transcript='';
@@ -9,9 +11,16 @@ let claudeSample=null;
 })();
 
 // Web Audio API Sound Effects for Wheel
+let sfxCtx=null;
+function getSfxCtx(){
+  if(!sfxCtx) sfxCtx=new (window.AudioContext || window.webkitAudioContext)();
+  if(sfxCtx.state==="suspended") sfxCtx.resume();
+  return sfxCtx;
+}
+
 function playClickSound() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = getSfxCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
@@ -28,7 +37,7 @@ function playClickSound() {
 
 function playWinSound() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = getSfxCtx();
     const notes = [440, 554.37, 659.25, 880];
     notes.forEach((freq, index) => {
       const osc = ctx.createOscillator();
@@ -46,6 +55,8 @@ function playWinSound() {
 }
 
 const arabicTopics = {
+  "المشوار": ["طريق ما بنساه","أسوأ زحمة","أول مرة سافرت لحالي","المواصلات العامة","رحلة مع الأصحاب","مشوار غيّر يومي"],
+  "قصص وحكايات": ["قصة سمعتها وأنا صغير","حكاية جدتي","أغرب صدفة صارت معي","قصة خوف","قصة نجاح ألهمتني","حكاية ما بصدقوها"],
   "عشوائي": [
     "يوم ما بنساه",
     "أغرب حلم",
@@ -76,7 +87,7 @@ const arabicTopics = {
     "مطعم ما بنساه",
     "أكلة بتذكرني بالبيت"
   ],
-  "الرياضة والجسم": [
+  "الجيم والصحة": [
     "الكارديو",
     "أول مرة بالنادي",
     "رياضة بحبها",
@@ -86,7 +97,7 @@ const arabicTopics = {
     "شكل الجسم",
     "الرياضة والمزاج"
   ],
-  "الفلوس": [
+  "الفلوس والمصاريف": [
     "أول دين",
     "أول مصروف",
     "أول راتب",
@@ -96,7 +107,7 @@ const arabicTopics = {
     "الفلوس والسعادة",
     "شغلة نفسي اشتريها"
   ],
-  "السوشيال ميديا": [
+  "التكنولوجيا": [
     "باسورد نسيته",
     "أول حساب إلي",
     "أول موبايل",
@@ -106,7 +117,7 @@ const arabicTopics = {
     "تطبيق ما بقدر أعيش بدونه",
     "الإنترنت غيّر حياتي"
   ],
-  "يومياتك": [
+  "الأصحاب والعيلة": [
     "شخص غيّر تفكيري",
     "موقف ما بنساه",
     "قرار غيّر حياتي",
@@ -119,6 +130,8 @@ const arabicTopics = {
 };
 
 const englishTopics = {
+  "المشوار": ["A road trip I remember","The worst traffic jam","The first time I travelled alone","Public transport","A trip with friends","A journey that changed my day"],
+  "قصص وحكايات": ["A story I heard as a child","A story from my grandmother","The strangest coincidence","A scary story","A success story that inspired me","A story nobody believes"],
   "عشوائي": [
     "A day I will never forget",
     "The strangest dream",
@@ -149,7 +162,7 @@ const englishTopics = {
     "An unforgettable restaurant",
     "A dish that reminds me of home"
   ],
-  "الرياضة والجسم": [
+  "الجيم والصحة": [
     "Cardio workouts",
     "First time at the gym",
     "A sport I love",
@@ -159,7 +172,7 @@ const englishTopics = {
     "Body shape and fitness",
     "Exercise and mood"
   ],
-  "الفلوس": [
+  "الفلوس والمصاريف": [
     "My first debt",
     "My first allowance",
     "My first salary",
@@ -169,7 +182,7 @@ const englishTopics = {
     "Money and happiness",
     "Something I really want to buy"
   ],
-  "السوشيال ميديا": [
+  "التكنولوجيا": [
     "A password I forgot",
     "My first social account",
     "My first mobile phone",
@@ -179,7 +192,7 @@ const englishTopics = {
     "An app I can't live without",
     "How the internet changed my life"
   ],
-  "يومياتك": [
+  "الأصحاب والعيلة": [
     "Someone who changed my mindset",
     "An unforgettable moment",
     "A life-changing decision",
@@ -199,6 +212,7 @@ function toggleMobileMenu(){
   const btn = document.getElementById('hamburger-btn');
   nav.classList.toggle('open');
   btn.classList.toggle('open');
+  btn.setAttribute('aria-expanded', nav.classList.contains('open'));
 }
 
 function showScreen(id){
@@ -225,6 +239,19 @@ function selectCategory(cat,btn){
   btn.parentElement.querySelectorAll('.opt').forEach(o=>o.classList.remove('active'));
   btn.classList.add('active');
 }
+function selectDuration(sec,btn){
+  selectedDuration=sec;
+  btn.parentElement.querySelectorAll('.opt').forEach(o=>o.classList.remove('active'));
+  btn.classList.add('active');
+}
+function selectMode(mode,btn){
+  selectedMode=mode;
+  btn.parentElement.querySelectorAll('.opt').forEach(o=>o.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('mode-hint').textContent = mode==='timer'
+    ? 'تايمر بس — بدون ميكروفون ولا تسجيل ولا تقييم رقمي.'
+    : 'بنسجّل صوتك وبنحلله بالذكاء الاصطناعي (بيحتاج ميكروفون).';
+}
 function selectLevel(lvl,btn){
   selectedLevel=lvl;
   btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
@@ -250,12 +277,11 @@ function generateTopic() {
   if (selectedCategory === "عشوائي") {
     Object.values(bank).forEach(arr => pool.push(...arr));
   } else {
-    pool = bank[selectedCategory] || bank["الشغل"];
+    pool = bank[selectedCategory] || [];
+    if (!pool.length) Object.values(bank).forEach(arr => pool.push(...arr));
   }
 
   const wheelTopics = [...pool].sort(() => 0.5 - Math.random()).slice(0, Math.min(6, pool.length));
-  const winnerIndex = Math.floor(Math.random() * wheelTopics.length);
-  const topic = wheelTopics[winnerIndex];
 
   const wheelEl = document.getElementById('wheel');
   
@@ -293,76 +319,139 @@ function generateTopic() {
   }
 
   svg.innerHTML = html;
+  wheelData = { topics: wheelTopics, seg };
+  lastWinner = -1; wheelTopic = ''; spinning = false; wheelRotation = 0;
+  clearWheelTimers();
+  wheelEl.style.transition = 'none';
+  wheelEl.style.transform = 'rotate(0deg)';
+  void wheelEl.offsetWidth;
+  wheelEl.style.transition = '';
+  setWheelUI('idle');
   showScreen('wheel-screen');
-
-  const statusTxt = document.getElementById('wheel-status');
-  const previewTxt = document.getElementById('wheel-topic-preview');
-
-  statusTxt.textContent = "عم ندور عجلة المواضيع...";
-  previewTxt.textContent = "يا ترى شو الموضوع اليوم؟";
-
-  const mid = winnerIndex * seg + seg / 2;
-  const extraTurns = 5 + Math.floor(Math.random() * 2); 
-  const target = extraTurns * 360 + (360 - mid);
-
-  wheelRotation += target;
-
-  setTimeout(() => {
-    wheelEl.style.transform = `rotate(${wheelRotation}deg)`;
-  }, 50);
-
-  // Play click sounds while wheel spins
-  let clickInterval = setInterval(() => {
-    playClickSound();
-  }, 180);
-
-  setTimeout(() => {
-    clearInterval(clickInterval);
-    clickInterval = setInterval(() => {
-      playClickSound();
-    }, 380);
-  }, 2500);
-
-  let counter = 0;
-  const interval = setInterval(() => {
-    previewTxt.textContent = pool[Math.floor(Math.random() * pool.length)];
-    counter++;
-  }, 100);
-
-  setTimeout(() => {
-    clearInterval(interval);
-    clearInterval(clickInterval);
-    playWinSound();
-    statusTxt.textContent = "🎯 تمام! هذا موضوعك:";
-    previewTxt.textContent = `"${topic}"`;
-    
-    setTimeout(() => {
-      document.getElementById('current-topic').textContent = topic;
-      document.getElementById('language-label').textContent = selectedLanguage === 'en' 
-        ? `English • ${selectedLevel} • ${selectedCategory}` 
-        : `عربي • ${selectedCategory}`;
-      document.getElementById('speaking').dataset.topic = topic;
-      document.getElementById('speaking').dataset.category = selectedCategory;
-      document.getElementById('speaking').dataset.lang = selectedLanguage;
-      resetTimer(); 
-      resetRecording();
-      document.getElementById('finish-button').disabled = true;
-      showScreen('speaking');
-    }, 1600);
-  }, 4500);
 }
 
-function resetTimer(){clearInterval(timerInterval);timerSeconds=120;sessionSeconds=0;updateTimer()}
+function setWheelUI(state, topic){
+  const status = document.getElementById('wheel-status');
+  const prev = document.getElementById('wheel-topic-preview');
+  const spinBtn = document.getElementById('wheel-spin-btn');
+  const goBtn = document.getElementById('wheel-go-btn');
+  if(state === 'idle'){
+    status.textContent = 'اكبس على العجلة لتلفّها 🎡';
+    prev.textContent = 'شو الموضوع اللي رح يطلعلك؟';
+    spinBtn.textContent = 'لفّ العجلة 🎡'; spinBtn.disabled = false;
+    goBtn.classList.add('hidden');
+  } else if(state === 'spinning'){
+    status.textContent = 'عم تلف العجلة…';
+    prev.textContent = '';
+    spinBtn.disabled = true;
+    goBtn.classList.add('hidden');
+  } else {
+    status.textContent = '🎯 هذا موضوعك:';
+    prev.textContent = `"${topic}"`;
+    spinBtn.textContent = 'لفّ مرة تانية 🔄'; spinBtn.disabled = false;
+    goBtn.classList.remove('hidden');
+  }
+}
+
+function spinWheel(){
+  if(spinning || !wheelData.topics.length) return;
+  const { topics, seg } = wheelData;
+  let idx;
+  do { idx = Math.floor(Math.random() * topics.length); } while(topics.length > 1 && idx === lastWinner);
+  lastWinner = idx; spinning = true; wheelTopic = '';
+  setWheelUI('spinning');
+
+  const mid = idx * seg + seg / 2;
+  const base = Math.ceil(wheelRotation / 360) * 360;
+  wheelRotation = base + (4 + Math.floor(Math.random() * 2)) * 360 + (360 - mid);
+  document.getElementById('wheel').style.transform = `rotate(${wheelRotation}deg)`;
+
+  clearWheelTimers();
+  const previewTxt = document.getElementById('wheel-topic-preview');
+  const clickInterval = setInterval(playClickSound, 200);
+  const previewInterval = setInterval(() => {
+    previewTxt.textContent = topics[Math.floor(Math.random() * topics.length)];
+  }, 100);
+  const doneTimer = setTimeout(() => {
+    clearWheelTimers();
+    playWinSound();
+    spinning = false;
+    wheelTopic = topics[idx];
+    setWheelUI('done', wheelTopic);
+  }, 3500);
+  wheelTimers = [clickInterval, previewInterval, doneTimer];
+}
+
+function goSpeakFromWheel(){
+  if(!spinning && wheelTopic) enterSpeaking(wheelTopic);
+}
+
+function clearWheelTimers(){
+  wheelTimers.forEach(t => { clearInterval(t); clearTimeout(t); });
+  wheelTimers = [];
+}
+
+function enterSpeaking(topic){
+  practiceMode = selectedMode;
+  sessionDuration = selectedDuration;
+  const sp = document.getElementById('speaking');
+  document.getElementById('current-topic').textContent = topic;
+  const langPart = selectedLanguage === 'en' ? `English • ${selectedLevel} • ${selectedCategory}` : `عربي • ${selectedCategory}`;
+  document.getElementById('language-label').textContent = `${langPart} • ${sessionDuration/60} د`;
+  sp.dataset.topic = topic;
+  sp.dataset.category = selectedCategory;
+  sp.dataset.lang = selectedLanguage;
+  resetRecording();
+  showScreen('speaking');
+}
+
+function setupSpeakingUI(){
+  const timerOnly = practiceMode === 'timer';
+  const btn = document.getElementById('record-button');
+  btn.textContent = timerOnly ? '▶' : '🎙️';
+  btn.classList.remove('recording');
+  btn.setAttribute('aria-label', timerOnly ? 'تشغيل التايمر' : 'بدء التسجيل');
+  document.getElementById('timer-reset').classList.toggle('hidden', !timerOnly);
+  document.getElementById('record-status').textContent = timerOnly
+    ? 'اضغط ▶ لتشغّل التايمر واحكي براحتك — بدون تسجيل صوتي.'
+    : 'لا تفكر كتير… احكي بس.';
+}
+
+function resetTimer(){clearInterval(timerInterval);timerRunning=false;timerSeconds=sessionDuration;sessionSeconds=0;updateTimer()}
 function updateTimer(){
   const m=String(Math.floor(timerSeconds/60)).padStart(2,'0');
   const s=String(timerSeconds%60).padStart(2,'0');
   document.getElementById('timer').textContent=`${m}:${s}`;
 }
 function startTimer(){
+  clearInterval(timerInterval);
   timerInterval=setInterval(()=>{
     timerSeconds--; sessionSeconds++; updateTimer();
-    if(timerSeconds<=0){clearInterval(timerInterval); stopRecording();}
+    if(practiceMode==='timer') document.getElementById('finish-button').disabled=false;
+    if(timerSeconds<=0){
+      clearInterval(timerInterval);
+      if(practiceMode==='timer'){
+        timerRunning=false;
+        const b=document.getElementById('record-button');
+        b.textContent='▶'; b.classList.remove('recording');
+        document.getElementById('record-status').textContent='خلص الوقت 👏 اضغط "خلصت".';
+      } else stopRecording();
+    }
   },1000);
+}
+function toggleTimerOnly(){
+  const b=document.getElementById('record-button');
+  if(timerRunning){
+    clearInterval(timerInterval); timerRunning=false;
+    b.textContent='▶'; b.classList.remove('recording');
+    document.getElementById('record-status').textContent='وقفنا التايمر مؤقتاً — اضغط ▶ لتكمّل.';
+    return;
+  }
+  if(timerSeconds<=0) return;
+  timerRunning=true;
+  b.textContent='⏸'; b.classList.add('recording');
+  document.getElementById('record-status').textContent='التايمر شغّال… احكي براحتك ⏱';
+  startTimer();
 }
 
 let audioCtx=null, analyser=null, levelRAF=null;
@@ -397,6 +486,7 @@ function stopLevelMeter(){
 }
 
 async function toggleRecording(){
+  if(practiceMode==='timer'){toggleTimerOnly();return}
   if(isRecording){stopRecording();return}
   if(location.protocol!=='https:' && !['localhost','127.0.0.1'].includes(location.hostname)){
     alert('التسجيل بيحتاج اتصال آمن (https). افتح الصفحة عبر رابط https أو من سيرفر محلي.');
@@ -427,7 +517,7 @@ async function toggleRecording(){
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
     if(SR){
       recognition=new SR();
-      recognition.lang = selectedLanguage==='en' ? 'en-US' : 'ar-SA';
+      recognition.lang = selectedLanguage==='en' ? 'en-US' : 'ar-SY';
       recognition.continuous=true; recognition.interimResults=true;
       recognition.onresult=e=>{
         let chunk='';
@@ -458,7 +548,7 @@ function stopRecording(){
 function resetRecording(){
   if(mediaRecorder&&isRecording)stopRecording();
   document.getElementById('audio-section').classList.add('hidden');
-  document.getElementById('record-status').textContent='لا تفكر كتير… احكي بس.';
+  setupSpeakingUI();
   document.getElementById('finish-button').disabled=true;
   document.getElementById('level-meter').classList.add('hidden');
   resetTimer();
@@ -478,12 +568,15 @@ function mockScores(){return {fluency:70+Math.floor(Math.random()*25),vocab:65+M
 function clampScore(n){n=Math.round(Number(n));return isFinite(n)?Math.max(0,Math.min(100,n)):75}
 
 function setResultLoading(){
+  document.getElementById('scores').classList.remove('hidden');
   ['s-fluency','s-vocab','s-grammar','s-ideas'].forEach(id=>document.getElementById(id).textContent='…');
   document.getElementById('ai-feedback').textContent='🤔 عم نسمع حكيك ونحلله بالذكاء الاصطناعي… ثواني وبتكون جاهزة.';
   document.getElementById('ai-tip').textContent='';
   document.getElementById('ai-badge').textContent='';
 }
 function renderResult(scores,feedback,tip,badge){
+  document.getElementById('scores').classList.toggle('hidden',!scores);
+  if(!scores) scores={fluency:'—',vocab:'—',grammar:'—',ideas:'—'};
   document.getElementById('s-fluency').textContent=scores.fluency+'%';
   document.getElementById('s-vocab').textContent=scores.vocab+'%';
   document.getElementById('s-grammar').textContent=scores.grammar+'%';
@@ -502,64 +595,79 @@ async function getAIEvaluation(topic,lang,level,text){
 
 async function finishSpeaking(){
   if(isRecording)stopRecording();
+  clearInterval(timerInterval); timerRunning=false;
   const sp=document.getElementById('speaking');
   const topic=sp.dataset.topic||document.getElementById('current-topic').textContent;
   const category=sp.dataset.category||selectedCategory;
   const lang=sp.dataset.lang||selectedLanguage;
-  const seconds=120-timerSeconds||sessionSeconds;
+  const seconds=sessionSeconds;
   const text=transcript.trim();
+  const genTip=feedbackBank[Math.floor(Math.random()*feedbackBank.length)].t;
 
   showScreen('result');
 
-  let scores,feedback,tip,badge,aiPowered=false;
+  let scores=null,feedback,tip=genTip,badge;
 
-  if(claudeSample && text.length>8){
+  if(practiceMode==='record' && claudeSample && text.length>8){
     setResultLoading();
     try{
       const data=await getAIEvaluation(topic,lang,selectedLevel,text);
       scores={fluency:clampScore(data.fluency),vocab:clampScore(data.vocabulary),grammar:clampScore(data.grammar),ideas:clampScore(data.ideas)};
-      feedback=data.feedback||feedbackBank[0].f; tip=data.tip||feedbackBank[0].t;
-      badge='🤖 تقييم حقيقي من Claude بناءً على كلامك الفعلي'; aiPowered=true;
+      feedback=data.feedback||''; tip=data.tip||genTip;
+      badge='🤖 تقييم من الذكاء الاصطناعي بناءً على كلامك الفعلي';
     }catch(e){
-      const fb=feedbackBank[Math.floor(Math.random()*feedbackBank.length)];
-      scores=mockScores(); feedback=fb.f; tip=fb.t;
-      badge = e && e.code==='not_granted' ? 'تقييم تقديري — ما منحك صلاحية استخدام الذكاء الاصطناعي بهالصحة' : 'تقييم تقديري — صار خطأ أثناء التحليل الحقيقي، جرّب مرة تانية.';
+      scores=null;
+      feedback='ما قدرنا نحلل حكيك هالمرة، بس محاولتك انحفظت. جرّب مرة تانية بعد شوي.';
+      badge=e&&e.code==='not_granted'?'ما في صلاحية لاستخدام الذكاء الاصطناعي هون':'صار خطأ أثناء التحليل';
     }
+  } else if(practiceMode==='timer'){
+    feedback=`حكيت ${fmtTime(seconds)} بدون تسجيل. الاستمرار بالحكي حتى لو تلخبطت هو اللي بيبني الطلاقة، فأحسنت! 👏`;
+    badge='تمرين تايمر — بدون تقييم رقمي';
   } else {
-    const fb=feedbackBank[Math.floor(Math.random()*feedbackBank.length)];
-    scores=mockScores(); feedback=fb.f; tip=fb.t;
-    badge = claudeSample ? 'تقييم تقديري — المتصفح ما دعم تحويل الصوت لنص، فما قدرنا نبعت حكيك لل AI' : 'تقييم تقديري';
+    feedback=claudeSample
+      ? 'ما قدر المتصفح يحوّل صوتك لنص (جرّب Chrome)، أو ما انحكى كلام كفاية للتحليل. تسجيلك محفوظ وتقدر تسمعه.'
+      : 'التحليل بالذكاء الاصطناعي مو متاح هون، بس محاولتك انحفظت.';
+    badge='بدون تقييم رقمي';
   }
 
   renderResult(scores,feedback,tip,badge);
 
   const list=getHistory();
-  list.unshift({topic,category,lang,level:selectedLevel,seconds,scores,date:new Date().toISOString(),aiPowered});
+  list.unshift({topic,category,lang,level:selectedLevel,seconds,mode:practiceMode,scores,feedback,tip,badge,date:new Date().toISOString(),aiPowered:!!scores});
   saveHistory(list.slice(0,50));
 }
 
 function fmtTime(sec){const m=Math.floor(sec/60),s=sec%60;return `${m}:${String(s).padStart(2,'0')}`}
+const esc=s=>escapeXml(String(s==null?'':s));
 
 function renderHistory(){
   const list=getHistory();
   const holder=document.getElementById('hist-list');
   if(!list.length){holder.innerHTML='<div class="empty">لسا ما حكيت عن شي. <br>يلا جرّب أول موضوع ✦</div>';return}
-  holder.innerHTML=list.map(item=>`
+  holder.innerHTML=list.map(item=>{
+    const s=item.scores;
+    const more=`<div class="hist-more">${s?`<div class="hist-scores"><span>🗣️ ${esc(s.fluency)}%</span><span>📚 ${esc(s.vocab)}%</span><span>✏️ ${esc(s.grammar)}%</span><span>💡 ${esc(s.ideas)}%</span></div>`:''}<p>${esc(item.feedback||'ما في تقييم لهالمحاولة.')}</p>${item.tip?`<p><strong>💡 ${esc(item.tip)}</strong></p>`:''}</div>`;
+    return `
     <div class="hist-card">
-      <div>
-        <span class="tag2">${item.lang==='en'?'🇬🇧 English':'🌍 '+item.category}</span>
-        <h3>${item.topic}</h3>
-        <small>${item.lang==='en'?item.level:'عربي'} • ${fmtTime(item.seconds)}</small>
+      <div class="hist-main">
+        <div>
+          <span class="tag2">${item.lang==='en'?'🇬🇧 English':'🌍 '+esc(item.category)}</span>${item.mode==='timer'?'<span class="hist-mode">⏱ تايمر</span>':''}
+          <h3>${esc(item.topic)}</h3>
+          <small>${item.lang==='en'?esc(item.level):'عربي'} • ${fmtTime(item.seconds)}</small>
+        </div>
+        <button aria-label="عرض التفاصيل" onclick="this.closest('.hist-card').classList.toggle('open')">⌄</button>
       </div>
-      <button title="عرض التقييم">▶</button>
-    </div>`).join('');
+      ${more}
+    </div>`}).join('');
 }
 
 function renderProgress(){
   const list=getHistory();
-  const body=document.getElementById('progress-body');
-  if(!list.length){body.innerHTML='<div class="empty">لسا ما بدأت رحلتك. احكي عن موضوع وشوف تقدمك هون ✦</div>';return}
-  body.style.display='';
+  const empty=document.getElementById('progress-empty');
+  const content=document.getElementById('progress-content');
+  empty.classList.toggle('hidden',list.length>0);
+  content.classList.toggle('hidden',!list.length);
+  if(!list.length)return;
   document.getElementById('p-count').textContent=list.length;
   const avg=Math.round(list.reduce((a,b)=>a+b.seconds,0)/list.length);
   document.getElementById('p-avg').textContent=fmtTime(avg);
@@ -569,7 +677,7 @@ function renderProgress(){
   document.getElementById('p-top').textContent=top?top[0]:'—';
   const max=Math.max(...Object.values(counts));
   document.getElementById('bars-holder').innerHTML=Object.entries(counts).map(([cat,n])=>`
-    <div class="bar-row"><span>${cat}</span><div class="bar-track"><div class="bar-fill" style="width:${(n/max*100)}%"></div></div><span>${n}</span></div>`).join('');
+    <div class="bar-row"><span>${esc(cat)}</span><div class="bar-track"><div class="bar-fill" style="width:${(n/max*100)}%"></div></div><span>${n}</span></div>`).join('');
 }
 
 renderHistory();
