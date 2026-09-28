@@ -54,6 +54,65 @@ function playWinSound() {
   } catch(e) {}
 }
 
+function playTickWarning() {
+  try {
+    const ctx = getSfxCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    gain.gain.setValueAtTime(0.001, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.13);
+  } catch(e) {}
+}
+
+function playBuzzEnd() {
+  try {
+    const ctx = getSfxCtx();
+    const now = ctx.currentTime;
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.001, now);
+    master.gain.linearRampToValueAtTime(0.28, now + 0.02);
+    master.gain.setValueAtTime(0.28, now + 0.55);
+    master.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+    master.connect(ctx.destination);
+
+    // buzzer body: two detuned square waves for a harsher, richer "wrong-answer" buzz
+    [110, 116].forEach(freq => {
+      const osc = ctx.createOscillator();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.linearRampToValueAtTime(freq * 0.7, now + 0.85);
+      osc.connect(master);
+      osc.start(now);
+      osc.stop(now + 0.86);
+    });
+
+    // low-pass to soften the square-wave harshness a bit
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1200, now);
+    master.disconnect();
+    master.connect(filter);
+    filter.connect(ctx.destination);
+
+    // subtle rhythmic tremolo so it reads as a "buzz" rather than a flat tone
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    lfo.frequency.setValueAtTime(28, now);
+    lfoGain.gain.setValueAtTime(0.15, now);
+    lfo.connect(lfoGain);
+    lfoGain.connect(master.gain);
+    lfo.start(now);
+    lfo.stop(now + 0.86);
+  } catch(e) {}
+}
+
 const arabicTopics = {
   "المشوار": ["طريق ما بنساه","أسوأ زحمة","أول مرة سافرت لحالي","المواصلات العامة","رحلة مع الأصحاب","مشوار غيّر يومي"],
   "قصص وحكايات": ["قصة سمعتها وأنا صغير","حكاية جدتي","أغرب صدفة صارت معي","قصة خوف","قصة نجاح ألهمتني","حكاية ما بصدقوها"],
@@ -428,8 +487,10 @@ function startTimer(){
   timerInterval=setInterval(()=>{
     timerSeconds--; sessionSeconds++; updateTimer();
     if(practiceMode==='timer') document.getElementById('finish-button').disabled=false;
+    if(timerSeconds>0 && timerSeconds<=5){ playTickWarning(); }
     if(timerSeconds<=0){
       clearInterval(timerInterval);
+      playBuzzEnd();
       if(practiceMode==='timer'){
         timerRunning=false;
         const b=document.getElementById('record-button');
